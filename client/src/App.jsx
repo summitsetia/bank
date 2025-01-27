@@ -1,17 +1,16 @@
-import Navbar from "./components/Navbar.jsx"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Dashboard from "./pages/dashboard/Dashboard.jsx";
+import Transactions from "./pages/transactions/Transactions.jsx";
 
-function App() {
-
+const App = () => {
   return (
-    <div>
-      <div className="" >
-        <Navbar />
-      </div>
-      <div className="ml-40">
+    <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/transactions" element={<Transactions />} />
+      </Routes>
+    </Router>
+  );
+};
 
-      </div>
-    </div>
-  )
-}
-
-export default App
+export default App;
