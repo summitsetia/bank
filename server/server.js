@@ -13,10 +13,16 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post("/login", (req, res) => {
-  const username = req.body.username;
+  const email = req.body.email;
   const password = req.body.password;
-  console.log(username);
+  console.log(email);
   console.log(password);
+  res.status(200);
+});
+
+app.post("/register", (req, res) => {
+  const registerData = req.body;
+  console.log(registerData);
   res.status(200);
 });
 
