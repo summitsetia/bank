@@ -17,4 +17,10 @@ const App = () => {
   );
 };
 
+{/* <Route exact path="/">
+{loggedIn ? <Redirect to="/dashboard" /> : <PublicHomePage />}
+</Route> */}
+
+
+
 export default App;

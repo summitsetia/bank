@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import bankLogo from '../../assets/bankLogo.svg';
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
+
 
 const Register = () => {
+    const navigate = useNavigate();
     const [registerData, setRegisterData] = useState({
         fName: '',
         lName: '',
@@ -21,7 +24,11 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3000/register', registerData);
+            const response = await axios.post('http://localhost:3000/register', registerData);
+            const isUserAuthenticated = response.data.isAuthenticated
+            if(isUserAuthenticated === "true") {
+                navigate("/dashboard");
+            } 
         } catch (err) {
             console.log(err);
         }
@@ -37,7 +44,7 @@ const Register = () => {
                     <input className="p-2 rounded border" placeholder="Last Name" name="lName" onChange={handleChange} value={registerData.lName} />
                     <input className="p-2 rounded border" placeholder="Email" name="email" onChange={handleChange} value={registerData.email} />
                     <input className="p-2 rounded border" placeholder="Password" name="password" onChange={handleChange} type="password" value={registerData.password} />
-                    <button className="bg-[#003366] text-white p-2 rounded font-bold" type="submit">Join</button>
+                    <button className="bg-[#003366] text-white p-2 rounded font-bold cursor-pointer " type="submit">Join</button>
                 </form>
             </div>
         </div>
