@@ -3,13 +3,11 @@ import session from "express-session";
 import cors from "cors";
 import bodyParser from "body-parser";
 import pg from "pg";
-import passport from "passport";
-import { Strategy } from "passport-local";
 import env from "dotenv";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 env.config();
-
 const app = express();
 const port = 3000;
 const saltRounds = 10;
@@ -30,80 +28,59 @@ db.connect();
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(
-  session({
-    secret: "TOPSECRETWORD",
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
-    },
-  })
-);
+// app.use(
+//   session({
+//     secret: "TOPSECRETWORD",
+//     saveUninitialized: false,
+//     resave: false,
+//     cookie: {
+//       secure: false,
+//       httpOnly: true,
+//       maxAge: 1000 * 60 * 60 * 24,
+//     },
+//   })
+// );
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(passport.initialize());
-app.use(passport.session());
 
-passport.use(
-  "local",
-  new Strategy({ usernameField: "email" }, async function verify(
-    email,
-    password,
-    cb
-  ) {
-    try {
-      const result = await db.query("SELECT * FROM users WHERE email = $1", [
-        email,
-      ]);
-      if (result.rows.length > 0) {
-        const storedPassword = result.rows[0].password;
-        bcrypt.compare(password, storedPassword, (err, isMatch) => {
-          if (err) {
-            return cb(err);
-          } else if (isMatch) {
-            return cb(null, result.rows[0]); // isAuthenticated() to true
-          } else {
-            return cb(null, false, { message: "Invalid Credentials" }); // isAuthenticated() to false
-          }
-        });
-      } else {
-        return cb(null, false, { message: "User Not Found" });
-      }
-    } catch (err) {
-      return cb(err);
+app.post("/login", async (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  try {
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+    if (result.rows.length > 0) {
+      const storedPassword = result.rows[0].password;
+      bcrypt.compare(password, storedPassword, async (err, isMatch) => {
+        if (err) {
+          return console.log(err);
+        } else if (isMatch) {
+          const user = result.rows[0];
+          const sessionId = crypto.randomUUID();
+          await db.query("UPDATE users SET session_id = $1 WHERE id = $2", [
+            user.id,
+            sessionId,
+          ]);
+          res.cookie("session_id", sessionId);
+          return res.json({ isAuthenticated: true });
+        } else {
+          return res.json({
+            isAuthenticated: false,
+            message: "Incorrect Password",
+          });
+        }
+      });
+    } else {
+      return res.json({
+        isAuthenticated: false,
+        message: "Incorrect Username",
+      });
     }
-  })
-);
-
-passport.serializeUser((user, cb) => {
-  cb(null, user.id);
-});
-
-passport.deserializeUser((id, cb) => {
-  db.query("SELECT * FROM users WHERE id = $1", [id], (err, result) => {
-    if (err) return cb(err);
-    cb(null, result.rows[0]);
-  });
-});
-
-app.post("/login", passport.authenticate("local"), (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({ isAuthenticated: true });
-  } else {
-    res.status(401).json({ message: "Invalid Credentials" });
+  } catch (err) {
+    return console.log(err);
   }
 });
-
-// app.get("/logout", (req, res) => {
-//   req.logout(function (err) {
-//     if (err) {
-//       return next(err);
-//     }
-//     res.redirect("/");
-//   });
-// });
 
 app.post("/register", async (req, res) => {
   const registerData = req.body;
@@ -116,7 +93,7 @@ app.post("/register", async (req, res) => {
       email,
     ]);
     if (checkResult.rows.length > 0) {
-      res.send("User Already Exists, Log In");
+      res.json({ message: "User Already Exists, Log In" });
     } else {
       bcrypt.hash(password, saltRounds, async (err, hash) => {
         if (err) {
@@ -127,10 +104,13 @@ app.post("/register", async (req, res) => {
             [fName, lName, email, hash]
           );
           const user = result.rows[0];
-          req.login(user, (err) => {
-            console.log("success");
-            res.json({ isAuthenticated: "true" });
-          });
+          const sessionId = crypto.randomUUID();
+          await db.query("UPDATE users SET session_id = $1 WHERE id = $2", [
+            user.id,
+            sessionId,
+          ]);
+          res.cookie("session_id", sessionId);
+          return res.json({ isAuthenticated: true });
         }
       });
     }
