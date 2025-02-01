@@ -24,9 +24,9 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:3000/register', registerData);
+            const response = await axios.post('http://localhost:3000/register', registerData,  { withCredentials: true });
             const isUserAuthenticated = response.data.isAuthenticated
-            if(isUserAuthenticated === "true") {
+            if(isUserAuthenticated === true) {
                 navigate("/dashboard");
             } 
         } catch (err) {
