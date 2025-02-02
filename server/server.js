@@ -59,10 +59,13 @@ app.post("/login", async (req, res) => {
           const user = result.rows[0];
           const sessionId = crypto.randomUUID();
           await db.query("UPDATE users SET session_id = $1 WHERE id = $2", [
-            user.id,
             sessionId,
+            user.id,
           ]);
-          res.cookie("session_id", sessionId);
+          res.cookie("session_id", sessionId, {
+            httpOnly: true,
+            sameSite: "None",
+          });
           return res.json({ isAuthenticated: true });
         } else {
           return res.json({
@@ -119,6 +122,29 @@ app.post("/register", async (req, res) => {
     }
   } catch (err) {
     console.log(err);
+  }
+});
+
+app.post("/authenticate", async (req, res) => {
+  const sessionId = req.cookies.session_id;
+  try {
+    const result = await db.query("SELECT * FROM users WHERE session_id = $1", [
+      sessionId,
+    ]);
+    if (result.rows.length > 0) {
+      return res.json({ isAuthenticated: true, userId: result.rows[0].id });
+    } else {
+      return res.json({
+        isAuthenticated: false,
+        message: "Session Id has Expired",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      isAuthenticated: false,
+      message: "Session Id has Expired or Does not exist",
+    });
   }
 });
 

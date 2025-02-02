@@ -28,7 +28,9 @@ const Register = () => {
             const isUserAuthenticated = response.data.isAuthenticated
             if(isUserAuthenticated === true) {
                 navigate("/dashboard");
-            } 
+            } else {
+                console.log(response.data.message)
+            }
         } catch (err) {
             console.log(err);
         }

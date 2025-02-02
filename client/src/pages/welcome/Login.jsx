@@ -20,13 +20,13 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:3000/login', loginData);
+            const response = await axios.post('http://localhost:3000/login', loginData,  { withCredentials: true });
             const isUserAuthenticated = response.data.isAuthenticated
             if(isUserAuthenticated === true) {
                 navigate("/dashboard");
             } 
         } catch (err) {
-            console.log(err.response.data);
+            console.log(err);
         }
     }; 
 
