@@ -6,15 +6,16 @@ import pg from "pg";
 import env from "dotenv";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import cookieParser from "cookie-parser";
 
 env.config();
 const app = express();
 const port = 3000;
 const saltRounds = 10;
-const corsOptions = {
-  origin: ["http://localhost:5173"],
-  credentials: true,
-};
+// const corsOptions = {
+//   origin: "http://localhost:5173",
+//   credentials: true,
+// };
 
 const db = new pg.Client({
   user: "postgres",
@@ -26,7 +27,13 @@ const db = new pg.Client({
 
 db.connect();
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Frontend URL
+    credentials: true,
+  })
+);
 app.use(express.json());
 // app.use(
 //   session({
@@ -41,6 +48,7 @@ app.use(express.json());
 //   })
 // );
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.post("/login", async (req, res) => {
   const email = req.body.email;
@@ -62,10 +70,8 @@ app.post("/login", async (req, res) => {
             sessionId,
             user.id,
           ]);
-          res.cookie("session_id", sessionId, {
-            httpOnly: true,
-            sameSite: "None",
-          });
+          res.cookie("session_id", sessionId, { secure: true, httpOnly: true });
+          console.log("Sucess");
           return res.json({ isAuthenticated: true });
         } else {
           return res.json({
@@ -112,10 +118,7 @@ app.post("/register", async (req, res) => {
             sessionId,
             user.id,
           ]);
-          res.cookie("session_id", sessionId, {
-            httpOnly: true,
-            sameSite: "None",
-          });
+          res.cookie("session_id", sessionId, { secure: true, httpOnly: true });
           return res.json({ isAuthenticated: true });
         }
       });
@@ -126,11 +129,14 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/authenticate", async (req, res) => {
-  const sessionId = req.cookies.session_id;
+  const sessionId = req.cookies;
+  console.log(sessionId);
+  console.log(sessionId.session_id);
   try {
     const result = await db.query("SELECT * FROM users WHERE session_id = $1", [
-      sessionId,
+      sessionId.session_id,
     ]);
+    console.log(result.rows); // assuming you're using pg and want to log the rows
     if (result.rows.length > 0) {
       return res.json({ isAuthenticated: true, userId: result.rows[0].id });
     } else {

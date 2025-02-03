@@ -10,16 +10,16 @@ const Dashboard = () => {
   useEffect(() => {
     const authenticate = async () => {
       try {
-        const response = axios.post("http://localhost:3000/authenticate", {}, { withCredentials: true })
+        const response = await axios.post('http://localhost:3000/authenticate', {}, { withCredentials: true })
         const isUserAuthenticated = response.data.isAuthenticated
         if(isUserAuthenticated === true) {
           setIsAuthenticated(true)
         } else {
-          navigate("/login")
+          navigate("/")
         }
       } catch (error) {
         console.log(error)
-        navigate("/login")
+        navigate("/")
       }
     }
 
