@@ -48,7 +48,11 @@ app.use(express.json());
 //   })
 // );
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieParser()); 
+
+// split midedleware in protected and public routes
+// create custom midelware, you can still have authenticate route but have simple logic, have most of the logic in middleware to remove repeated code
+c c
 
 app.post("/login", async (req, res) => {
   const email = req.body.email;
@@ -129,12 +133,12 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/authenticate", async (req, res) => {
-  const sessionId = req.cookies;
+  const sessionId = req.cookies.session_id;
+  console.log(req.cookies);
   console.log(sessionId);
-  console.log(sessionId.session_id);
   try {
     const result = await db.query("SELECT * FROM users WHERE session_id = $1", [
-      sessionId.session_id,
+      sessionId,
     ]);
     console.log(result.rows); // assuming you're using pg and want to log the rows
     if (result.rows.length > 0) {
@@ -151,6 +155,17 @@ app.post("/authenticate", async (req, res) => {
       isAuthenticated: false,
       message: "Session Id has Expired or Does not exist",
     });
+  }
+});
+
+app.post("/welcome", (req, res) => {
+  const cookie = req.cookies;
+  console.log(cookie);
+  console.log(Object.keys(cookie).length);
+  if (Object.keys(cookie).length > 0) {
+    res.json({ isAuthenticated: true });
+  } else {
+    res.json({ isAuthenticated: false });
   }
 });
 

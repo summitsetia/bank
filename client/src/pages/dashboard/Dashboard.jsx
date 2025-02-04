@@ -10,7 +10,7 @@ const Dashboard = () => {
   useEffect(() => {
     const authenticate = async () => {
       try {
-        const response = await axios.post('http://localhost:3000/authenticate', {}, { withCredentials: true })
+        const response = await axios.post('http://localhost:3000/authenticate', {}, { withCredentials: true }) // withCredentials: true option in an HTTP request is used to indicate that cookies (or other credentials) should be sent along with cross-origin requests.
         const isUserAuthenticated = response.data.isAuthenticated
         if(isUserAuthenticated === true) {
           setIsAuthenticated(true)
