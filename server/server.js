@@ -52,7 +52,7 @@ app.use(cookieParser());
 
 // split midedleware in protected and public routes
 // create custom midelware, you can still have authenticate route but have simple logic, have most of the logic in middleware to remove repeated code
-c c
+
 
 app.post("/login", async (req, res) => {
   const email = req.body.email;
